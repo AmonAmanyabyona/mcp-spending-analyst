@@ -1,0 +1,329 @@
+# Setup
+
+How this project's development environment was built, from nothing to a
+running skeleton. Follow top to bottom.
+
+Target: macOS. Windows/Linux differences are noted where they matter.
+
+---
+
+## 0. Prerequisites
+
+| Tool | Why | Check |
+|---|---|---|
+| Python 3.11+ | the server and client | `python3 --version` |
+| uv | dependency + venv management | `uv --version` |
+| git | version control | `git --version` |
+| Node.js 22+ | MCP Inspector only, via npx | `node --version` |
+| VS Code | editor | — |
+
+Install `uv` if missing:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Node is only needed to run the MCP Inspector. If you don't have it,
+install it from nodejs.org — `npx` comes with it and nothing gets
+permanently installed.
+
+---
+
+## 1. Create the repository on GitHub
+
+Do this on GitHub first, so the remote exists before the first commit.
+
+1. Go to https://github.com/new
+2. **Repository name:** `mcp-spending-analyst`
+3. **Description:** `A local MCP server that lets an AI agent answer questions about your bank statements without uploading them.`
+4. **Visibility:** Public
+5. **Do not** initialise with a README, .gitignore, or licence — we add
+   those locally so the first commit is ours.
+6. Create repository.
+
+Leave the page open; you need the clone URL in the next step.
+
+### Why public from the start
+
+This repo is the deliverable. Making it public later means the commit
+history is written as if nobody would read it. Public from commit one
+enforces better hygiene — and it is why step 3 exists before step 4.
+
+---
+
+## 2. Clone and open in VS Code
+
+```bash
+cd ~/projects            # or wherever you keep repos
+git clone https://github.com/AmonAmanyabyona/mcp-spending-analyst.git
+cd mcp-spending-analyst
+code .
+```
+
+If `code` isn't a recognised command: open VS Code, press `Cmd+Shift+P`,
+run "Shell Command: Install 'code' command in PATH", then retry.
+
+---
+
+## 3. Protect the data BEFORE writing any code
+
+This is the step that matters most, and it has to come first. Once a bank
+CSV is committed, removing it from git history is painful and the repo is
+already public.
+
+Create `.gitignore`:
+
+```gitignore
+# Real financial data — never commit
+data/
+*.csv
+!sample_data/*.csv
+
+# Secrets
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+.vscode/settings.json
+```
+
+Note the pattern: **ignore all CSVs, then re-allow only `sample_data/`.**
+A blanket `data/` rule alone would not catch a statement accidentally
+saved to the project root.
+
+Commit this on its own, immediately:
+
+```bash
+git add .gitignore
+git commit -m "Add gitignore covering financial data and secrets"
+git push -u origin main
+```
+
+Verify it works before continuing:
+
+```bash
+mkdir -p data && touch data/statement.csv
+git status --short          # data/ must NOT appear
+```
+
+If `data/statement.csv` shows up, fix `.gitignore` before going further.
+
+---
+
+## 4. Initialise the Python project
+
+```bash
+uv init --no-readme --no-workspace
+uv add mcp openai pandas python-dotenv
+uv add --dev pytest ruff
+```
+
+This creates `pyproject.toml`, `uv.lock`, and `.venv/`. Commit
+`pyproject.toml` and `uv.lock`; `.venv/` is already ignored.
+
+`uv.lock` is committed deliberately — it makes the project reproducible
+for anyone who clones it, which is the point of publishing it.
+
+---
+
+## 5. Create the folder structure
+
+```bash
+mkdir -p analyst sample_data data web tests
+touch analyst/__init__.py
+touch analyst/parse.py analyst/categorise.py
+touch server.py client.py generate_sample.py
+touch .env.example README.md
+```
+
+Resulting layout:
+
+```
+mcp-spending-analyst/
+├── server.py            # MCP server — tool definitions only
+├── client.py            # MCP client — the agent loop
+├── generate_sample.py   # produces fake transactions
+├── analyst/
+│   ├── __init__.py
+│   ├── parse.py         # CSV -> clean DataFrame
+│   └── categorise.py    # merchant string -> category
+├── sample_data/         # fake data, committed
+├── data/                # real exports, gitignored
+├── web/                 # HTML/CSS/JS frontend (later)
+├── tests/
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+├── uv.lock
+├── SETUP.md
+└── README.md
+```
+
+The `analyst/` package holds all the logic and knows nothing about MCP.
+`server.py` is a thin layer of tool definitions on top of it. That split
+keeps the business logic unit-testable without a protocol in the way.
+
+`data/` is empty and gitignored, so git won't track it. Add
+`data/.gitkeep` if you want the directory to exist on clone.
+
+---
+
+## 6. Configure credentials
+
+Create `.env.example` (committed, no real values):
+
+```
+# Google AI Studio: https://aistudio.google.com/api-keys
+GEMINI_API_KEY=
+```
+
+Create `.env` (gitignored, real value):
+
+```bash
+echo "GEMINI_API_KEY=your_actual_key_here" > .env
+```
+
+Then confirm git is ignoring it:
+
+```bash
+git status --short          # .env must NOT appear
+```
+
+### Key hygiene
+
+- Never paste the key into a screenshot, a commit, or a chat.
+- If it is exposed, delete it in AI Studio and create a new one. Rotating
+  is free and instant; assuming it wasn't scraped is not.
+- Load it with `python-dotenv`, never hardcode it.
+
+---
+
+## 7. VS Code configuration
+
+Install these extensions:
+
+- Python (Microsoft)
+- Pylance
+- Ruff (charliermarsh)
+
+Point VS Code at the uv venv: `Cmd+Shift+P` -> "Python: Select
+Interpreter" -> choose `./.venv/bin/python`. If it isn't listed, enter the
+path manually. Without this, imports show as unresolved even though the
+code runs.
+
+Optional `.vscode/settings.json` (gitignored above — keep it local):
+
+```json
+{
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests"],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
+  },
+  "files.exclude": { "**/__pycache__": true }
+}
+```
+
+---
+
+## 8. Verify the environment
+
+```bash
+uv run python -c "import mcp, openai, pandas; print('deps ok')"
+```
+
+Then check the Gemini key reaches Google:
+
+```bash
+uv run python - <<'EOF'
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+client = OpenAI(
+    api_key=os.environ["GEMINI_API_KEY"],
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+)
+r = client.chat.completions.create(
+    model="gemini-2.5-flash",
+    messages=[{"role": "user", "content": "reply with the single word: ok"}],
+)
+print(r.choices[0].message.content)
+EOF
+```
+
+Expect `ok`.
+
+- **404** — check the trailing slash on the base URL, and check the model
+  id against the current list in AI Studio. Model names change often.
+- **401/403** — the key is wrong or was deleted.
+- **429** — free-tier rate limit; wait a minute.
+
+Do not proceed until this prints. Every later step assumes model access
+works, and debugging it inside the agent loop is much harder.
+
+---
+
+## 9. Commit the skeleton
+
+```bash
+git add .
+git commit -m "Scaffold project structure and dependencies"
+git push
+```
+
+---
+
+## Commit plan
+
+Keep the history readable — it is part of what a reviewer looks at.
+One commit per working increment, roughly:
+
+1. `Add gitignore covering financial data and secrets`
+2. `Scaffold project structure and dependencies`
+3. `Add sample transaction generator`
+4. `Add CSV parser with tests`
+5. `Add merchant categoriser with tests`
+6. `Add MCP server with spending_by_category tool`
+7. `Add find_recurring_charges tool`
+8. `Add compare_months and search_transactions tools`
+9. `Add MCP client with Gemini tool-calling loop`
+10. `Add local web UI`
+11. `Add README with setup and data-handling notes`
+
+Avoid `wip`, `fix`, and `update` as messages. Each commit should name what
+changed and be checkoutable.
+
+---
+
+## Data handling
+
+Recorded here so it is explicit from day one:
+
+| Data | Where it goes |
+|---|---|
+| Raw bank CSV | stays on the local machine, never committed, never sent |
+| Tool return values (aggregates) | sent to the model provider |
+| Sample/fake data | committed, safe to demo with |
+
+The Gemini free tier may use prompt data for product improvement, and
+tool results are part of the prompt. Two consequences:
+
+1. Tools return computed aggregates, never raw transaction rows. This
+   keeps the amount of data leaving the machine minimal.
+2. Demos and screen recordings use `sample_data/`, never real statements.
+
+For a fully local setup, point the client at Ollama instead — same
+OpenAI-compatible interface, `base_url="http://localhost:11434/v1"`.
