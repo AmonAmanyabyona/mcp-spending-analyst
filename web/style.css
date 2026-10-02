@@ -1,0 +1,245 @@
+/* Spending analyst --- a reading instrument for a bank statement.
+   Ledger conventions: tabular figures, hairline rules, generous leading.
+   One accent, reserved for the local-data indicator and focus rings. */
+
+:root {
+  --paper:    #FAFAFB;
+  --raised:   #FFFFFF;
+  --ink:      #16181D;
+  --muted:    #6B7078;
+  --rule:     #E3E5E9;
+  --accent:   #2F6F4F;
+  --warn:     #9A3B32;
+
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --measure: 36rem;
+  --step: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:  #15171B;
+    --raised: #1C1F24;
+    --ink:    #E8EAED;
+    --muted:  #969BA4;
+    --rule:   #272B31;
+    --accent: #5FAF86;
+    --warn:   #E0847A;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* --- header ------------------------------------------------------- */
+
+.bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.bar h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.where {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* --- thread ------------------------------------------------------- */
+
+#thread {
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+.opening p {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+}
+
+.starters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.starters button {
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--raised);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.starters button:hover { border-color: var(--muted); }
+
+.turn { margin-bottom: 2rem; }
+
+.asked {
+  margin: 0 0 1rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--ink);
+  font-weight: 500;
+}
+
+.said { margin: 0; }
+.said p { margin: 0 0 0.75em; }
+.said p:last-child { margin-bottom: 0; }
+.said strong { font-weight: 600; }
+
+.said ul {
+  margin: 0 0 0.75em;
+  padding: 0;
+  list-style: none;
+}
+
+/* Amounts align down the right the way a statement does. */
+.said li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.said li .figure { font-variant-numeric: tabular-nums; }
+
+/* --- tool trace: machine output, marked as such ------------------- */
+
+.trace {
+  margin: 0 0 1rem;
+  border-left: 2px solid var(--rule);
+  padding-left: 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.trace summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.1rem 0;
+}
+
+.trace summary::-webkit-details-marker { display: none; }
+.trace summary::before { content: "+ "; }
+.trace[open] summary::before { content: "- "; }
+
+.trace .call {
+  margin-top: 0.5rem;
+  word-break: break-word;
+}
+
+.trace .back {
+  margin: 0.15rem 0 0;
+  padding-left: 1.2rem;
+  white-space: pre-wrap;
+  opacity: 0.8;
+}
+
+.pending { color: var(--muted); font-size: 0.875rem; }
+.failed  { color: var(--warn); }
+
+/* --- composer ----------------------------------------------------- */
+
+#composer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+}
+
+#question {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--raised);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+#question::placeholder { color: var(--muted); }
+
+#send {
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+#send[disabled] { opacity: 0.45; cursor: default; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 30rem) {
+  .bar { padding: 0.9rem 1rem; }
+  #thread { padding: 1.5rem 1rem 1rem; }
+  #composer { padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px)); }
+}

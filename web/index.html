@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spending analyst</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="bar">
+  <h1>Spending analyst</h1>
+  <p class="where"><span class="dot" aria-hidden="true"></span>Reading files on this machine</p>
+</header>
+
+<main id="thread" aria-live="polite">
+  <section class="opening">
+    <p>Ask about your transactions. The figures come from your own files;
+       the model only writes the sentence around them.</p>
+    <ul class="starters">
+      <li><button type="button" data-ask="Which subscriptions am I paying for?">Which subscriptions am I paying for?</button></li>
+      <li><button type="button" data-ask="What did I spend on groceries in March?">What did I spend on groceries in March?</button></li>
+      <li><button type="button" data-ask="How did my spending change from March to April?">How did my spending change from March to April?</button></li>
+    </ul>
+  </section>
+</main>
+
+<form id="composer" autocomplete="off">
+  <label class="visually-hidden" for="question">Your question</label>
+  <input id="question" name="question" type="text" placeholder="Ask about your spending" required>
+  <button id="send" type="submit">Ask</button>
+</form>
+
+<script src="/app.js"></script>
+</body>
+</html>
