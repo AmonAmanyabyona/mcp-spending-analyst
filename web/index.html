@@ -2,34 +2,80 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Spending analyst</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>&#9776;</text></svg>">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
-<header class="bar">
-  <h1>Spending analyst</h1>
-  <p class="where"><span class="dot" aria-hidden="true"></span>Reading files on this machine</p>
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <h1>Spending analyst</h1>
+  </div>
+  <p class="locality">
+    <span class="pulse" aria-hidden="true"></span>
+    Running on this machine
+  </p>
 </header>
 
-<main id="thread" aria-live="polite">
-  <section class="opening">
-    <p>Ask about your transactions. The figures come from your own files;
-       the model only writes the sentence around them.</p>
-    <ul class="starters">
-      <li><button type="button" data-ask="Which subscriptions am I paying for?">Which subscriptions am I paying for?</button></li>
-      <li><button type="button" data-ask="What did I spend on groceries in March?">What did I spend on groceries in March?</button></li>
-      <li><button type="button" data-ask="How did my spending change from March to April?">How did my spending change from March to April?</button></li>
-    </ul>
-  </section>
-</main>
+<div class="shell">
 
-<form id="composer" autocomplete="off">
-  <label class="visually-hidden" for="question">Your question</label>
-  <input id="question" name="question" type="text" placeholder="Ask about your spending" required>
-  <button id="send" type="submit">Ask</button>
-</form>
+  <aside class="panel" aria-label="Loaded data">
+    <h2 class="panel-title">Statements</h2>
+
+    <label class="drop" id="drop" for="file">
+      <input id="file" type="file" accept=".csv,text/csv" multiple hidden>
+      <span class="drop-main">Add a CSV</span>
+      <span class="drop-sub">or drag one here</span>
+    </label>
+
+    <p class="note" id="upload-note" hidden></p>
+
+    <dl class="facts" id="facts">
+      <div class="fact"><dt>Source</dt><dd id="fact-source">checking…</dd></div>
+      <div class="fact"><dt>Period</dt><dd id="fact-period">—</dd></div>
+      <div class="fact"><dt>Transactions</dt><dd id="fact-count">—</dd></div>
+      <div class="fact"><dt>Outgoing</dt><dd id="fact-total">—</dd></div>
+    </dl>
+
+    <p class="tags" id="fact-categories"></p>
+
+    <button type="button" class="ghost" id="clear" hidden>Remove my statements</button>
+
+    <p class="fineprint">
+      Files stay in <code>./data</code> on this computer. Only the figures a
+      tool returns are sent to the model.
+    </p>
+  </aside>
+
+  <main class="stage">
+    <div id="thread" aria-live="polite">
+      <section class="opening" id="opening">
+        <h2>Ask about your money</h2>
+        <p>
+          The figures come from your own files. The model chooses which
+          analysis to run and writes the sentence around the result — it
+          never does the arithmetic.
+        </p>
+        <ul class="starters">
+          <li><button type="button" data-ask="Which subscriptions am I paying for?">Which subscriptions am I paying for?</button></li>
+          <li><button type="button" data-ask="What did I spend on groceries in March 2026?">What did I spend on groceries alone in April 2026?</button></li>
+          <li><button type="button" data-ask="How did my spending change from March 2026 to April 2026?">How did my spending change between two months?</button></li>
+          <li><button type="button" data-ask="What was my largest single purchase?">What was my largest single purchase?</button></li>
+        </ul>
+      </section>
+    </div>
+
+    <form id="composer" autocomplete="off">
+      <label class="visually-hidden" for="question">Your question</label>
+      <input id="question" name="question" type="text" placeholder="Ask about your spending" required>
+      <button id="send" type="submit">Ask</button>
+    </form>
+  </main>
+
+</div>
 
 <script src="/app.js"></script>
 </body>

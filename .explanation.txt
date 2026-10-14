@@ -1,0 +1,38 @@
+
+## Reading it from the bottom up
+
+**`generate_sample.py`** → makes a CSV out of thin air. Depends on nothing. It exists because every other file needs transactions to exist before it can do anything. You can't test a parser with no file to parse.
+
+**`analyst/parse.py`** → turns that CSV into a clean table. Can't run without a CSV. It only knows pandas — it has never heard of MCP, models, or the web.
+
+**`analyst/categorise.py`** → takes parse's table and adds two columns: a tidy merchant name and a category. Can't run without parse, because it expects parse's exact column names. Also knows nothing about MCP.
+
+**`server.py`** → the five tools. Can't work without both analyst files, because every tool starts by loading and categorising the data. This file is thin on purpose: all the real thinking happened below it.
+
+**`client.py` / `app.py`** → launch the server, ask what tools it has, hand those to Gemini, run the loop. Can't work without `server.py`.
+
+**`web/`** → the browser. Can't work without `app.py` serving it.
+
+## The one link that's different
+
+Every arrow below the dashed line is an ordinary Python `import`. `server.py` says `from analyst.parse import load_folder`. Same program, same memory.
+
+The arrow **across** the dashed line is not. `client.py` never does `import server`. It starts `server.py` as a **separate running program** and sends it text down a pipe — the same pipe a terminal uses. The server reads JSON off its stdin and writes JSON back to stdout. Two programs, shouting through a letterbox.
+
+That's the whole of MCP, and it's why the pieces fall out the way they do.
+
+**It's why your server has no AI in it.** It can't — it's a different process. It never sees the model and the model never sees it. The client sits in the middle translating.
+
+**It's why the model has to be *told* what's there.** With an import you'd read the source. Across a pipe you can't, so the first thing the client does is ask: "what can you do?" The server answers with names, descriptions, and schemas. That question-and-answer is MCP.
+
+**It's why docstrings are the integration.** The description is the only thing that crosses the pipe. Change the words, change the behaviour.
+
+**It's why Claude Desktop works.** It's a client too. It can start the same program, ask the same question, get the same five tools. Your server has no idea who's on the other end and doesn't care.
+
+## The simplest version
+
+Below the line: a normal Python program that reads CSVs and does maths. You could have written it ten years ago.
+
+Above the line: something that asks that program what it can do, and relays those answers to a model.
+
+MCP is just an agreement about how those two shout at each other. The protocol is the letterbox, not the house.
